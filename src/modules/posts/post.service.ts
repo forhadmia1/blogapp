@@ -62,7 +62,27 @@ const getAllPost = async (payload: { search: string | undefined, tags: string[] 
     return { data: result, pagination: { total, page, limit, totalPage: Math.ceil(total / limit) } }
 }
 
+const getPostById = async (id: string) => {
+    const result = await prisma.$transaction(async (transaction) => {
+        const post = await transaction.post.findUnique({
+            where: { id }
+        })
+
+        if (!post) {
+            return null
+        }
+
+        await transaction.post.update({
+            where: { id },
+            data: { views: { increment: 1 } }
+        })
+        return post
+    })
+    return result
+}
+
 export const PostService = {
     cratePost,
-    getAllPost
+    getAllPost,
+    getPostById
 }

@@ -62,8 +62,36 @@ const getAllPost = async (req: Request, res: Response) => {
     }
 }
 
+const getPostById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params
+
+        const result = await PostService.getPostById(id as string)
+
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                message: "Post not found"
+            })
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Post fetched successfully",
+            data: result
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch post",
+            error: error
+        })
+    }
+}
+
 
 export const postController = {
     cratePost,
-    getAllPost
+    getAllPost,
+    getPostById
 }

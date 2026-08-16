@@ -6,6 +6,7 @@ const router: Router = express.Router();
 
 router.get('/', postController.getAllPost)
 
+router.get('/:id', postController.getPostById)
 
 router.post('/', authMiddleware(USER_ROLE.USER), postController.cratePost)
 
