@@ -10,8 +10,8 @@ const cratePost = async (payload: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 
     return result
 }
 
-const getAllPost = async (payload: { search: string | undefined, tags: string[] | [], isFeatured: boolean | undefined, status: PostStatus | undefined, authorId: string | undefined }) => {
-    const { search, tags, isFeatured, status, authorId } = payload;
+const getAllPost = async (payload: { search: string | undefined, tags: string[] | [], page: number, isFeatured: boolean | undefined, status: PostStatus | undefined, authorId: string | undefined, skip: number, limit: number, sortBy: string, orderBy: string }) => {
+    const { search, tags, isFeatured, status, authorId, skip, limit, sortBy, orderBy, page } = payload;
 
 
     const andFilter: PostWhereInput[] = []
@@ -42,14 +42,24 @@ const getAllPost = async (payload: { search: string | undefined, tags: string[] 
         andFilter.push({ author_id: authorId })
     }
 
-
     const result = await prisma.post.findMany({
         where: {
             AND: andFilter
         },
+        skip: skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: orderBy
+        }
     })
 
-    return result
+    const total = await prisma.post.count({
+        where: {
+            AND: andFilter
+        }
+    })
+
+    return { data: result, pagination: { total, page, limit, totalPage: Math.ceil(total / limit) } }
 }
 
 export const PostService = {

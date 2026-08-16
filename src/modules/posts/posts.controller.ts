@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { PostService } from "./post.service";
 import { PostStatus } from "../../../generated/prisma/enums";
+import { Post } from "../../../generated/prisma/client";
+import { PaginationSortingHelper } from "../../helpers/paginationSortingHelper";
 
 const cratePost = async (req: Request, res: Response) => {
     try {
@@ -34,12 +36,16 @@ const getAllPost = async (req: Request, res: Response) => {
         const tagsArray = tags ? (tags as string)?.split(',') : []
 
 
+        const options = PaginationSortingHelper(req.query)
+
+
         const result = await PostService.getAllPost({
             search: search as string | undefined,
             tags: tagsArray,
             isFeatured: isFeatured ? isFeatured === 'true' : undefined,
             status: status as PostStatus | undefined,
-            authorId: authorId as string | undefined
+            authorId: authorId as string | undefined,
+            ...options
         })
 
         res.status(200).json({
