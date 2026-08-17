@@ -41,10 +41,10 @@ model Commnet {
   content   String
   author_id String //manage better auth later
   post_id   String
-  post      Post          @relation(fields: [post_id], references: [id])
+  post      Post          @relation(fields: [post_id], references: [id], onDelete: Cascade)
   parent_id String?
   //self relation for threaded comments
-  parent    Commnet?      @relation("CommentReplies", fields: [parent_id], references: [id])
+  parent    Commnet?      @relation("CommentReplies", fields: [parent_id], references: [id], onDelete: Cascade)
   replies   Commnet[]     @relation("CommentReplies")
   status    CommnetStatus @default(Approved)
   createdAt DateTime      @default(now())

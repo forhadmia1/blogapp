@@ -1,5 +1,5 @@
 
-import { Post, PostStatus } from "../../../generated/prisma/client";
+import { CommnetStatus, Post, PostStatus } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
@@ -46,6 +46,13 @@ const getAllPost = async (payload: { search: string | undefined, tags: string[] 
         where: {
             AND: andFilter
         },
+        include: {
+            _count: {
+                select: {
+                    commnets: true
+                }
+            }
+        },
         skip: skip,
         take: limit,
         orderBy: {
@@ -65,7 +72,43 @@ const getAllPost = async (payload: { search: string | undefined, tags: string[] 
 const getPostById = async (id: string) => {
     const result = await prisma.$transaction(async (transaction) => {
         const post = await transaction.post.findUnique({
-            where: { id }
+            where: { id },
+            include: {
+                commnets: {
+                    where: {
+                        parent_id: null,
+                        status: CommnetStatus.Approved
+                    },
+                    orderBy: {
+                        'createdAt': 'desc'
+                    },
+                    include: {
+                        replies: {
+                            where: {
+                                status: CommnetStatus.Approved
+                            },
+
+                            include: {
+                                replies: {
+                                    where: {
+                                        status: CommnetStatus.Approved
+                                    },
+
+                                }
+                            }
+                        }
+                    }
+                },
+                _count: {
+                    select: {
+                        commnets: {
+                            where: {
+                                status: CommnetStatus.Approved
+                            }
+                        }
+                    }
+                }
+            }
         })
 
         if (!post) {

@@ -4,6 +4,7 @@ import cors from "cors";
 import { PostRouter } from "./modules/posts/posts.router";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
+import { commentRouter } from "./modules/comments/comment.router";
 
 const app: Application = express()
 
@@ -35,6 +36,7 @@ app.get('/', (req: Request, res: Response) => {
 
 //add routers
 app.use('/post', PostRouter)
+app.use('/comment', commentRouter)
 
 
 export default app
