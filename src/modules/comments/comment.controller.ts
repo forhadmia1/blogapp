@@ -95,9 +95,51 @@ const deleteCommnet = async (req: Request, res: Response) => {
     }
 }
 
+const updateComment = async (req: Request, res: Response) => {
+    try {
+        const commentId = req.params.commentId as string
+        const authUser = req.user
+        const { content, status } = req.body
+        const result = await commentService.updateComment(commentId, { content }, authUser.id as string)
+        res.status(200).json({
+            success: true,
+            message: "Comment updated successfully",
+            data: result
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: (error instanceof Error) ? error?.message : 'Failed to update comment',
+            error: error
+        })
+    }
+}
+
+const modrateComment = async (req: Request, res: Response) => {
+    try {
+        const commentId = req.params.commentId as string
+        const { status } = req.body
+        const result = await commentService.modrateComment(commentId, status)
+        res.status(200).json({
+            success: true,
+            message: "Comment moderated successfully",
+            data: result
+        })
+    } catch (error) {
+        const err = (error instanceof Error) ? error?.message : 'Failed to modrate comment'
+        res.status(500).json({
+            success: false,
+            message: err,
+            error: err
+        })
+    }
+}
+
 export const commentController = {
     createComment,
     getCommentsById,
     getCommentsByAuthorId,
-    deleteCommnet
+    deleteCommnet,
+    updateComment,
+    modrateComment
 }

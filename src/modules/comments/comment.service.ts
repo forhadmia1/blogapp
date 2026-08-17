@@ -1,4 +1,4 @@
-import { Commnet } from "../../../generated/prisma/client"
+import { Commnet, CommnetStatus } from "../../../generated/prisma/client"
 import { prisma } from "../../lib/prisma"
 
 const createComment = async (payload: Omit<Commnet, "id" | "createdAt" | "updatedAt" | "status">) => {
@@ -96,10 +96,59 @@ const deleteComment = async (commentId: string, authorId: string) => {
     return result
 }
 
+const updateComment = async (commentId: string, payload: {
+    content: string
+}, authorId: string) => {
+
+
+    const comment = await prisma.commnet.findUniqueOrThrow({
+        where: {
+            id: commentId
+        }
+    })
+
+    if (comment.author_id !== authorId) {
+        throw new Error("You are not authorized to update this comment")
+    }
+
+    const result = await prisma.commnet.update({
+        where: {
+            id: commentId
+        },
+        data: payload
+    })
+
+    return result
+}
+
+
+const modrateComment = async (commentId: string, status: CommnetStatus) => {
+    const comment = await prisma.commnet.findUniqueOrThrow({
+        where: {
+            id: commentId
+        }
+    })
+
+    if (comment.status === status) {
+        throw new Error("Comment is already in the same status")
+    }
+
+    const result = await prisma.commnet.update({
+        where: {
+            id: commentId
+        },
+        data: {
+            status: status
+        }
+    })
+    return result
+}
 
 export const commentService = {
     createComment,
     getCommentsById,
     getCommentsByAuthor,
-    deleteComment
+    deleteComment,
+    updateComment,
+    modrateComment
 }
