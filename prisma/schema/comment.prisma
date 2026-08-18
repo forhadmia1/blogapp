@@ -1,0 +1,23 @@
+model Commnet {
+    id        String        @id @default(uuid())
+    content   String
+    author_id String //manage better auth later
+    post_id   String
+    post      Post          @relation(fields: [post_id], references: [id], onDelete: Cascade)
+    parent_id String?
+    //self relation for threaded comments
+    parent    Commnet?      @relation("CommentReplies", fields: [parent_id], references: [id], onDelete: Cascade)
+    replies   Commnet[]     @relation("CommentReplies")
+    status    CommnetStatus @default(Approved)
+    createdAt DateTime      @default(now())
+    updatedAt DateTime      @updatedAt
+
+    @@index([author_id])
+    @@index([post_id])
+    @@map("comments")
+}
+
+enum CommnetStatus {
+    Approved
+    Rejected
+}
