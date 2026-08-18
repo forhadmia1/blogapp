@@ -8,6 +8,8 @@ router.get('/', postController.getAllPost)
 
 router.get('/my-posts', authMiddleware(USER_ROLE.USER), postController.getAuthorPost)
 
+router.get('/stats', authMiddleware(USER_ROLE.ADMIN), postController.getStats)
+
 router.get('/:id', postController.getPostById)
 
 router.post('/', authMiddleware(USER_ROLE.USER), postController.cratePost)

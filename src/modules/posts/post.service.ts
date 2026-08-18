@@ -2,6 +2,7 @@
 import { CommnetStatus, Post, PostStatus } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
+import { USER_ROLE } from "../../middleware/auth";
 
 const cratePost = async (payload: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'author_id'>, userId: string) => {
     const result = await prisma.post.create({
@@ -276,6 +277,68 @@ const deletePost = async (id: string, authorId: string, isAdmin: boolean) => {
 
 }
 
+const getStats = async () => {
+    return await prisma.$transaction(async (transaction) => {
+
+        const [totalPosts, totalDraft, totalPublished, totalArchived, totalComments, totalUsers, totalAdmin, approvedComment, totalViews] = await Promise.all([
+            transaction.post.count(),
+            transaction.post.count({
+                where: {
+                    status: PostStatus.Draft
+                }
+            }),
+            transaction.post.count({
+                where: {
+                    status: PostStatus.Published
+                }
+            }),
+            transaction.post.count({
+                where: {
+                    status: PostStatus.Archived
+                }
+            }),
+            transaction.commnet.count(),
+            transaction.user.count(
+                {
+                    where: {
+                        role: USER_ROLE.USER
+                    }
+                }
+            ),
+            transaction.user.count({
+                where: {
+                    role: USER_ROLE.ADMIN
+                }
+            }),
+            transaction.commnet.count({
+                where: {
+                    status: CommnetStatus.Approved
+                }
+            }),
+            transaction.post.aggregate({
+                _sum: {
+                    views: true
+                }
+            })
+
+        ]);
+
+
+
+        return {
+            totalPosts,
+            totalDraft,
+            totalPublished,
+            totalArchived,
+            totalComments,
+            totalUsers,
+            approvedComment,
+            totalAdmin,
+            totalViews
+        }
+    })
+}
+
 
 
 export const PostService = {
@@ -284,5 +347,6 @@ export const PostService = {
     getPostById,
     getAuthorPost,
     updateOwnPost,
-    deletePost
+    deletePost,
+    getStats
 }
