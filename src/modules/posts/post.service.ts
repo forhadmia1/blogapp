@@ -124,8 +124,165 @@ const getPostById = async (id: string) => {
     return result
 }
 
+
+const getAuthorPost = async (payload: {
+    page: number,
+    limit: number,
+    skip: number,
+    orderBy: string,
+    sortBy: string,
+    search: string | undefined,
+    tags: string[],
+    isFeatured: boolean | undefined,
+    status: PostStatus | undefined,
+    authorId: string
+}
+) => {
+
+
+
+    const { search, tags, isFeatured, page, limit, skip, sortBy, status, orderBy, authorId } = payload;
+
+    const user = await prisma.user.findUniqueOrThrow({
+        where: {
+            id: authorId
+        },
+        select: {
+            status: true
+        }
+    })
+
+
+    if (user.status === 'INACTIVE') {
+        throw new Error("You are banned from creating posts")
+    }
+
+    const andFilter: PostWhereInput[] = []
+
+    if (search) {
+        andFilter.push({
+            OR: [
+                { title: { contains: search, mode: 'insensitive' } },
+                { content: { contains: search, mode: 'insensitive' } },
+            ]
+        })
+    }
+
+    if (tags.length > 0) {
+        andFilter.push({ tags: { hasEvery: tags } })
+    }
+
+    if (isFeatured) {
+        andFilter.push({ isFeatured: isFeatured })
+    }
+
+    if (status) {
+        andFilter.push({ status: status })
+    }
+
+
+
+
+
+    const result = await prisma.post.findMany({
+        where: {
+            author_id: authorId,
+            AND: andFilter
+        },
+        include: {
+            _count: {
+                select: {
+                    commnets: true
+                }
+            }
+        },
+        skip: skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: orderBy
+        }
+    })
+
+    const total = await prisma.post.count({
+        where: {
+            author_id: authorId,
+            AND: andFilter
+        }
+    })
+
+
+    return { data: result, pagination: { total, page, limit, totalPage: Math.ceil(total / limit) } }
+}
+
+
+//update own post 
+
+const updateOwnPost = async ({ payload, isAdmin, authorId, id }: { payload: Partial<Post>, isAdmin: boolean, authorId: string, id: string }) => {
+
+
+    const post = await prisma.post.findUniqueOrThrow({
+        where: {
+            id
+        }
+    })
+
+
+    if (!isAdmin && post.author_id !== authorId) {
+        throw new Error("You are not authorized to update this post")
+    }
+
+    if (!isAdmin) {
+        delete payload.isFeatured;
+    }
+
+    delete payload.id;
+    delete payload.author_id;
+    delete payload.updatedAt;
+    delete payload.createdAt;
+
+    const result = await prisma.post.update({
+        where: {
+            id,
+            author_id: authorId
+        },
+        data: payload
+    })
+
+    return result
+
+}
+
+
+const deletePost = async (id: string, authorId: string, isAdmin: boolean) => {
+
+    const post = await prisma.post.findUniqueOrThrow({
+        where: {
+            id
+        }
+    })
+
+
+    if (!isAdmin && post.author_id !== authorId) {
+        throw new Error("You are not authorized to delete this post")
+    }
+
+    const result = await prisma.post.delete({
+        where: {
+            id
+        }
+    })
+
+    return result
+
+}
+
+
+
 export const PostService = {
     cratePost,
     getAllPost,
-    getPostById
+    getPostById,
+    getAuthorPost,
+    updateOwnPost,
+    deletePost
 }

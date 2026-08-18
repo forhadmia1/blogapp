@@ -3,6 +3,7 @@ import { PostService } from "./post.service";
 import { PostStatus } from "../../../generated/prisma/enums";
 import { Post } from "../../../generated/prisma/client";
 import { PaginationSortingHelper } from "../../helpers/paginationSortingHelper";
+import { USER_ROLE } from "../../middleware/auth";
 
 const cratePost = async (req: Request, res: Response) => {
     try {
@@ -90,8 +91,100 @@ const getPostById = async (req: Request, res: Response) => {
 }
 
 
+const getAuthorPost = async (req: Request, res: Response) => {
+    try {
+        const user = req.user
+        const { search, tags, isFeatured, status } = req.query;
+
+        const tagsArray = tags ? (tags as string)?.split(',') : []
+
+
+
+        const {
+            page, limit, skip, orderBy, sortBy
+        } = PaginationSortingHelper(req.query)
+
+        const result = await PostService.getAuthorPost({
+            page,
+            limit,
+            skip,
+            orderBy,
+            sortBy,
+            search: search as string | undefined,
+            tags: tagsArray,
+            isFeatured: isFeatured ? isFeatured === 'true' : undefined,
+            status: status as PostStatus | undefined,
+            authorId: user.id
+        })
+        res.status(200).json({
+            success: true,
+            message: 'Author posts fetched successfully',
+            data: result
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch author posts",
+            error: error
+        })
+    }
+}
+
+
+const updateOwnPost = async (req: Request, res: Response) => {
+    try {
+        const user = req.user
+        const { id } = req.params
+
+        const isAdmin = user.role === USER_ROLE.ADMIN;
+
+        const result = await PostService.updateOwnPost({
+            payload: {
+                ...req.body
+            }, id: id as string, authorId: user.id, isAdmin
+        })
+        res.status(200).json({
+            success: true,
+            message: 'Post updated successfully',
+            data: result
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to update post",
+            error: error
+        })
+    }
+}
+
+const deletePost = async (req: Request, res: Response) => {
+    try {
+        const user = req.user
+        const { id } = req.params
+
+        const isAdmin = user.role === USER_ROLE.ADMIN;
+
+        const result = await PostService.deletePost(id as string, user.id, isAdmin)
+        res.status(200).json({
+            success: true,
+            message: 'Post deleted successfully',
+            data: result
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete post",
+            error: error
+        })
+    }
+}
+
+
 export const postController = {
     cratePost,
     getAllPost,
-    getPostById
+    getPostById,
+    getAuthorPost,
+    updateOwnPost,
+    deletePost
 }
