@@ -1,10 +1,12 @@
 import "dotenv/config";
-import express, { Application, Request, Response } from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import { PostRouter } from "./modules/posts/posts.router";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { commentRouter } from "./modules/comments/comment.router";
+import errorHandler from "./middleware/globalErrorHandler";
+import notFoundHandler from "./middleware/notFound";
 
 const app: Application = express()
 
@@ -38,5 +40,13 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/post', PostRouter)
 app.use('/comment', commentRouter)
 
+
+
+//not found handler
+app.use(notFoundHandler)
+
+
+//global error handler
+app.use(errorHandler)
 
 export default app

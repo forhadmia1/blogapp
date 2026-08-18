@@ -1,11 +1,10 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { PostService } from "./post.service";
 import { PostStatus } from "../../../generated/prisma/enums";
-import { Post } from "../../../generated/prisma/client";
 import { PaginationSortingHelper } from "../../helpers/paginationSortingHelper";
 import { USER_ROLE } from "../../middleware/auth";
 
-const cratePost = async (req: Request, res: Response) => {
+const cratePost = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user;
 
@@ -23,15 +22,11 @@ const cratePost = async (req: Request, res: Response) => {
             data: result
         })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to create post",
-            error: error
-        })
+        next(error)
     }
 }
 
-const getAllPost = async (req: Request, res: Response) => {
+const getAllPost = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { search, tags, isFeatured, status, authorId } = req.query;
         const tagsArray = tags ? (tags as string)?.split(',') : []
@@ -55,15 +50,11 @@ const getAllPost = async (req: Request, res: Response) => {
             data: result
         })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch posts",
-            error: error
-        })
+        next(error)
     }
 }
 
-const getPostById = async (req: Request, res: Response) => {
+const getPostById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params
 
@@ -82,16 +73,12 @@ const getPostById = async (req: Request, res: Response) => {
             data: result
         })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch post",
-            error: error
-        })
+        next(error)
     }
 }
 
 
-const getAuthorPost = async (req: Request, res: Response) => {
+const getAuthorPost = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user
         const { search, tags, isFeatured, status } = req.query;
@@ -122,16 +109,12 @@ const getAuthorPost = async (req: Request, res: Response) => {
             data: result
         })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch author posts",
-            error: error
-        })
+        next(error)
     }
 }
 
 
-const updateOwnPost = async (req: Request, res: Response) => {
+const updateOwnPost = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user
         const { id } = req.params
@@ -149,15 +132,11 @@ const updateOwnPost = async (req: Request, res: Response) => {
             data: result
         })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to update post",
-            error: error
-        })
+        next(error)
     }
 }
 
-const deletePost = async (req: Request, res: Response) => {
+const deletePost = async (req: Request, res: Response, next: NewableFunction) => {
     try {
         const user = req.user
         const { id } = req.params
@@ -171,17 +150,13 @@ const deletePost = async (req: Request, res: Response) => {
             data: result
         })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete post",
-            error: error
-        })
+        next(error)
     }
 }
 
 
 
-const getStats = async (req: Request, res: Response) => {
+const getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const result = await PostService.getStats()
         res.status(200).json({
@@ -190,11 +165,7 @@ const getStats = async (req: Request, res: Response) => {
             data: result
         })
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch stats",
-            error: error
-        })
+        next(error)
     }
 }
 
