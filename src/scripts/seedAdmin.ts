@@ -26,11 +26,11 @@ async function seedAdminUser() {
         }
 
         console.log('***creating admin user***')
-        const signupAdmin = await fetch(`${process.env.APP_URL}/api/auth/sign-up/email`, {
+        const signupAdmin = await fetch(`${process.env.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Origin': process.env.APP_URL as string
+                'Origin': process.env.BETTER_AUTH_URL as string
             },
             body: JSON.stringify(payload)
         })
